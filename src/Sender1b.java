@@ -42,6 +42,8 @@ public class Sender1b {
 		int retryTimeOut = Integer.parseInt(args[3]);
 		int currSequence = 0;
 		
+		print("Starting Sender ...");
+		
 		
 		
 		// create client socket
@@ -84,12 +86,8 @@ public class Sender1b {
 				DatagramPacket sendPacket = 
 						new DatagramPacket(buffer,packet_data_size+3, IPAddress, port);
 				
-				
-				
-				
-				
 				boolean isPositiveACK = false;
-				
+				print(""+currSequence);
 				
 				do{
 					// start a timer
@@ -103,12 +101,14 @@ public class Sender1b {
 						clientSocket.receive(receivePacket);
 						
 						int ACK = (int) receiveACK[1];
+						print(ACK+" "+currSequence);
 						if(ACK == currSequence)
 							isPositiveACK = true;
 						else
-							continue;
+							System.out.println(" ack didn't match so resend..");
 					}catch (SocketTimeoutException e) {
 						// possibly include a limit of timeout allowed.
+						System.out.println(" time out then continue");
 						continue;
 					}
 					

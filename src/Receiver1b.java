@@ -20,6 +20,7 @@ public class Receiver1b {
 		int port = Integer.parseInt(args[0]);
 		String receivedFileName = args[1];
 		int currSequence = 0;
+		print("Starting Receiver ...");
 		
 		
 		
@@ -38,25 +39,31 @@ public class Receiver1b {
 				DatagramPacket receivedPacket = 
 						new DatagramPacket(receiveData, receiveData.length);
 				
-				InetAddress SenderIPAddress = receivedPacket.getAddress();
-				int SenderPort = receivedPacket.getPort();
+				
 				//receive datagram
 				serverSocket.receive(receivedPacket);
+				
+				InetAddress SenderIPAddress = receivedPacket.getAddress();
+				int SenderPort = receivedPacket.getPort();
 				EOF = receiveData[2];
 				
 				int senderSequence = (int) receiveData[1];
 				ACKData[0] =  receiveData[0];
 				ACKData[1] =  receiveData[1];
 				
+				print(senderSequence+" "+currSequence);
+				
 				
 				if(currSequence == senderSequence) {
 					print(receivedPacket.getLength()+" "+receivedPacket.getData().length);
 					fileOutputStream.write(receivedPacket.getData(), HEADER_SIZE, receivedPacket.getLength()-HEADER_SIZE);
 					currSequence = (currSequence + 1) % 2;
+					System.out.println(" Positive");
 				}
 				
 				DatagramPacket sendPacket = new DatagramPacket(ACKData, ACKData.length, SenderIPAddress, SenderPort);
 				serverSocket.send(sendPacket);
+				System.out.println(" just sent ACK to"+SenderPort+ " "+ SenderIPAddress);
 				
 			}
 			
