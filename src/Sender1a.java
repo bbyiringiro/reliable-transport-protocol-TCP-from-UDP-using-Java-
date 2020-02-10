@@ -17,9 +17,9 @@ public class Sender1a {
 
 	public static void main(String[] args) throws FileNotFoundException, IOException, Exception{
 		
-		String remoteHost = args[1];
-		int port = Integer.parseInt(args[2]);
-		String fileName = args[3];
+		String remoteHost = args[0];
+		int port = Integer.parseInt(args[1]);
+		String fileName = args[2];
 		
 		
 		// create client socket
