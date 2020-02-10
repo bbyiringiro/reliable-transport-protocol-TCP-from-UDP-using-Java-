@@ -1,11 +1,14 @@
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.net.DatagramPacket;
 import java.net.DatagramSocket;
 import java.net.InetAddress;
+import java.net.SocketTimeoutException;
 
 import javax.sound.midi.Sequence;
+import javax.swing.Timer;
 
 public class Sender1b {
 
@@ -15,84 +18,121 @@ public class Sender1b {
 	public static void print(String s) {
 		System.out.println(s);
 	}
+	
+	int byte2Integer(byte b) {
+		return (int) b;
+	}
 
 	public static void main(String[] args) throws FileNotFoundException, IOException, Exception{
 		
-		int sequence = 0;
-		byte [] b= new byte[2];
+//		int sequence = 0;
+//		byte [] b= new byte[2];
+//		
+//		for(int i=0; i<10; ++i) {
+//			b[1] = (byte) sequence;
+//			System.out.println((int) b[1]);
+//			
+//			sequence = (sequence+1) % 2;
+//		}
 		
-		for(int i=0; i<10; ++i) {
-			b[1] = (byte) sequence;
-			System.out.println((int) b[1]);
-			
-			sequence = (sequence+1) % 2;
+		
+		String remoteHost = args[0];
+		int port = Integer.parseInt(args[1]);
+		String fileName = args[2];
+		int retryTimeOut = Integer.parseInt(args[3]);
+		int currSequence = 0;
+		
+		
+		
+		// create client socket
+		DatagramSocket clientSocket = new DatagramSocket();
+		
+		//translate hostname to IP address using DNS
+		InetAddress IPAddress = InetAddress.getByName("localhost");
+		
+		
+		byte[]   sendData = new byte[1024];
+		byte[] receiveACK = new byte[2];
+		
+
+
+		long startTime = System.currentTimeMillis();
+		long stopTime;
+		FileInputStream fileInputStream = null;
+		double fileSize = (new File(fileName)).length();
+		try {
+			fileInputStream = new FileInputStream(fileName);
+			int i = 0;
+			int packet_data_size;
+			do {
+				// rdt_rcv(rcvpkt)
+				byte[] buffer = new byte[PACKET_SIZE];
+				i = fileInputStream.read(buffer, HEADER_SIZE, PAYLOAD_SIZE);
+				packet_data_size =i;
+				//EOF case
+				if(i<PAYLOAD_SIZE) {
+					buffer[2] = 1;
+					if(i==-1)
+						packet_data_size = 0;
+				}
+				
+				//add sequence number
+				buffer[1] = (byte) currSequence;
+				
+				//rdt_send(data)
+				// create datagram with data-to-send length, IP addr, port
+				DatagramPacket sendPacket = 
+						new DatagramPacket(buffer,packet_data_size+3, IPAddress, port);
+				
+				
+				
+				
+				
+				boolean isPositiveACK = false;
+				
+				
+				do{
+					// start a timer
+					try {
+						// send datagram to the receiver 
+						clientSocket.send(sendPacket);
+						clientSocket.setSoTimeout(retryTimeOut);
+						
+						DatagramPacket receivePacket = 
+								new DatagramPacket(receiveACK, receiveACK.length);
+						clientSocket.receive(receivePacket);
+						
+						int ACK = (int) receiveACK[1];
+						if(ACK == currSequence)
+							isPositiveACK = true;
+						else
+							continue;
+					}catch (SocketTimeoutException e) {
+						// possibly include a limit of timeout allowed.
+						continue;
+					}
+					
+				}while(!isPositiveACK);
+				
+				currSequence = (currSequence +1) % 2;
+
+				
+			} while(i == PAYLOAD_SIZE);
+			clientSocket.close();
+			fileInputStream.close();
 		}
+		catch (Exception e) {
+			System.out.println(e);
+		} finally {
+			if(fileInputStream != null)
+				fileInputStream.close();
+		}
+		stopTime = System.currentTimeMillis();
+		
+		double throughput = (fileSize/1024)/(stopTime - startTime)/1000;
 		
 		
-//		String remoteHost = args[1];
-//		int port = Integer.parseInt(args[2]);
-//		String fileName = args[3];
-//		
-//		
-//		// create client socket
-//		DatagramSocket clientSocket = new DatagramSocket();
-//		
-//		//translate hostname to IP address using DNS
-//		InetAddress IPAddress = InetAddress.getByName("localhost");
-//		
-//		
-//		byte[]   sendData = new byte[1024];
-//		byte[] receiveACK = new byte[1];
-//		
-//
-//
-//		
-//		FileInputStream fileInputStream = null;
-//		try {
-//			fileInputStream = new FileInputStream(fileName);
-//			int i = 0;
-//			int packet_data_size;
-//			do {
-//				byte[] buffer = new byte[PACKET_SIZE];
-//				i = fileInputStream.read(buffer, HEADER_SIZE, PAYLOAD_SIZE);
-//				packet_data_size =i;
-//				//EOF case
-//				if(i<PAYLOAD_SIZE) {
-//					buffer[2] = 1;
-//					if(i==-1)
-//						packet_data_size = 0;
-//				}
-//				
-//				// create datagram with data-to-send length, IP addr, port
-//				DatagramPacket sendPacket = 
-//						new DatagramPacket(buffer,packet_data_size+3, IPAddress, port);
-//				// send datagram to the receiver 
-//				clientSocket.send(sendPacket);
-//
-//				try {
-//					Thread.sleep(10);
-//				}
-//				catch(InterruptedException e) {
-//					e.printStackTrace();
-//				}
-//				
-//				
-//				
-//				
-//				
-//			} while(i == PAYLOAD_SIZE);
-//			clientSocket.close();
-//			fileInputStream.close();
-//		}
-//		catch (Exception e) {
-//			System.out.println(e);
-//		} finally {
-//			if(fileInputStream != null)
-//				fileInputStream.close();
-//		}
-//		
-		
-//		// create input stream
+		// create input stream
 //		BufferedReader inFromUser = 
 //				new BufferedReader(new InputStreamReader(System.in));
 //		// create client socket
