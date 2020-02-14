@@ -13,8 +13,8 @@ public class Receiver1a {
 	}
 
 	public static void main(String[] args) throws Exception{
-		 
-		
+		// validate the length of arguments passed
+		Common.checkArgumentLength(args.length, 2);
 		int port = Integer.parseInt(args[0]);
 		String receivedFileName = args[1];
 		
@@ -34,7 +34,7 @@ public class Receiver1a {
 						new DatagramPacket(receiveData, receiveData.length);
 				//receive datagram
 				serverSocket.receive(receivedPacket);
-				EOF = receiveData[2];
+				EOF = receivedPacket.getData()[2];
 				print(receivedPacket.getLength()+" "+receivedPacket.getData().length);
 				fileOutputStream.write(receivedPacket.getData(), HEADER_SIZE, receivedPacket.getLength()-HEADER_SIZE);
 			}

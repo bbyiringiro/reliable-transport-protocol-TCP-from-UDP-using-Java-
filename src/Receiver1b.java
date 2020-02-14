@@ -15,8 +15,9 @@ public class Receiver1b {
 	}
 
 	public static void main(String[] args) throws Exception{
-		 
-		
+		// validate the length of arguments passed
+		Common.checkArgumentLength(args.length, 2);
+
 		int port = Integer.parseInt(args[0]);
 		String receivedFileName = args[1];
 		int currSequence = 0;
@@ -36,6 +37,7 @@ public class Receiver1b {
 			
 			while(EOF!=1){
 				// create space for received datagram
+				receiveData = new byte[PACKET_SIZE];
 				DatagramPacket receivedPacket = 
 						new DatagramPacket(receiveData, receiveData.length);
 				
@@ -45,11 +47,11 @@ public class Receiver1b {
 				
 				InetAddress SenderIPAddress = receivedPacket.getAddress();
 				int SenderPort = receivedPacket.getPort();
-				EOF = receiveData[2];
+				EOF = receivedPacket.getData()[2];
 				
-				int senderSequence = (int) receiveData[1];
-				ACKData[0] =  receiveData[0];
-				ACKData[1] =  receiveData[1];
+				int senderSequence = (int) receivedPacket.getData()[1];
+				ACKData[0] =  receivedPacket.getData()[0];
+				ACKData[1] =  receivedPacket.getData()[1];
 				
 				print(senderSequence+" "+currSequence);
 				
