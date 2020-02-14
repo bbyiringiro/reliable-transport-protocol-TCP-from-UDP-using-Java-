@@ -8,16 +8,43 @@ import java.net.DatagramSocket;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 
+// TODO: Auto-generated Javadoc
+/**
+ * The Class Sender1b.
+ */
 public class Sender1b {
 
+	/** The Constant PACKET_SIZE. */
 	final static int PACKET_SIZE = 1027;
+	
+	/** The Constant PAYLOAD_SIZE. */
 	final static int PAYLOAD_SIZE = 1024;
+	
+	/** The Constant HEADER_SIZE. */
 	final static int HEADER_SIZE = 3;
+	
+	/** The Constant TRIALLIMIT. */
 	final static int TRIALLIMIT = 10;
+	
+	/**
+	 * Prints the.
+	 *
+	 * @param s the s
+	 */
 	public static void print(String s) {
 		System.out.println(s);
 	}
 	
+	/**
+	 * Send File.
+	 *
+	 * @param fileInputStream the file input stream
+	 * @param remoteHostIP the remote host IP
+	 * @param remoteHostPort the remote host port
+	 * @param retryTimeOut the retry time out
+	 * @return the double[] array of two values: the number of transmission and the total time taken
+	 * @throws IOException Signals that an I/O exception has occurred.
+	 */
 	public static double [] sendFile(FileInputStream fileInputStream, InetAddress remoteHostIP, int remoteHostPort, int retryTimeOut) throws IOException{
 		// create client socket
 		DatagramSocket clientSocket = new DatagramSocket();
@@ -32,8 +59,8 @@ public class Sender1b {
 		
 		long startTime = System.currentTimeMillis();
 		long stopTime=0;
-		
-		BufferedInputStream reader = new BufferedInputStream(fileInputStream);
+		// Buffering Input in improve reading time from the disk.
+		BufferedInputStream reader = new BufferedInputStream(fileInputStream); 
 		do {
 			// rdt_rcv(rcvpkt)
 //			byte[] buffer = new byte[PACKET_SIZE];
@@ -63,29 +90,23 @@ public class Sender1b {
 					if(i<PAYLOAD_SIZE && trials ==0) {
 						finalTransN = ++transN;
 						stopTime = System.currentTimeMillis();
-						print("the end ");
+//						print("the end ");
 					}
 					++transN;
-					++trials;
 					// send datagram to the receiver 
 					clientSocket.send(sendPacket);
 					clientSocket.setSoTimeout(retryTimeOut);
 					
 					DatagramPacket receivePacket = 
 							new DatagramPacket(receiveACK, receiveACK.length);
-//					print("yest");
 					clientSocket.receive(receivePacket);
-//					print("and yest");
 					
 					int ACK = (int) receivePacket.getData()[1];
-					print(currSequence+" ACK:"+ACK);
+//					print(currSequence+" ACK:"+ACK);
 					if(ACK == currSequence)
 						isPositiveACK = true;
-					else
-						System.out.println(" ack didn't match so resend..");
 				}catch (SocketTimeoutException e) {
-					// possibly include a limit of timeout allowed.
-					System.out.println(" time out then continue");
+					++trials;
 					continue;
 				}catch (IOException e) {
 					e.printStackTrace();
@@ -93,10 +114,7 @@ public class Sender1b {
 				}
 				
 			}while(!isPositiveACK && trials < TRIALLIMIT);
-			
 			currSequence = (currSequence +1) % 2;
-
-			
 		} while(i == PAYLOAD_SIZE && trials<TRIALLIMIT);
 		clientSocket.close();
 		fileInputStream.close();
@@ -110,6 +128,12 @@ public class Sender1b {
 		
 	}
 
+	/**
+	 * The main method.
+	 *
+	 * @param args the arguments
+	 * @throws Exception the exception
+	 */
 	public static void main(String[] args) throws Exception{
 		// validate the length of arguments passed
 		Common.checkArgumentLength(args.length, 4);
@@ -126,9 +150,6 @@ public class Sender1b {
 		FileInputStream fileInputStream = null;
 		File file =new File(fileName);
 		double fileSize = file.length();
-		
-		
-
 		try
 		{
 			fileInputStream = new FileInputStream(file);
@@ -146,7 +167,8 @@ public class Sender1b {
 		double throughput = (fileSize/1024)/ totoalTime;
 		print("filesize is "+fileSize +" filesize / 1024 is"+(fileSize/1024)+"totol time in sec"+ totoalTime);
 		print("number of transmission is"+transN);
-		print(""+throughput);
+		print("Retransmission:" + (transN-Math.ceil(fileSize/1024)));
+		print("Throughput: "+throughput);
 
 				
 
