@@ -4,7 +4,7 @@
  * The Class Common.
  * Is a Utility class that contains static functions that will be used by various classes
  */
-public class Common {
+final public class Common {
 	
 	/**
 	 * Check argument length passed vs the one required by a particular program.
@@ -17,5 +17,15 @@ public class Common {
 		if(givenLen != requiredsize) {
 			throw new IllegalArgumentException("Few or incorrect Arguments");
 		}
+	}
+	
+	
+	/**
+	 * Simplified java string print function
+	 *
+	 * @param s the string
+	 */
+	public static void print(String s) {
+		System.out.println(s);
 	}
 }

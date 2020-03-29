@@ -47,8 +47,9 @@ public class Receiver1a {
 				serverSocket.receive(receivedPacket);
 				//check if EOF was passed
 				EOF = receivedPacket.getData()[2];
-//				System.out.println(receivedPacket.getLength()+" "+receivedPacket.getData().length);
+				System.out.println(receivedPacket.getLength()+" "+receivedPacket.getData().length);
 				//offset the header bytes and write only payload
+				
 				fileOutputStream.write(receivedPacket.getData(), HEADER_SIZE, receivedPacket.getLength()-HEADER_SIZE);
 			}
 			
